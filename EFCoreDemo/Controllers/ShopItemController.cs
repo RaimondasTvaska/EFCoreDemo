@@ -1,6 +1,8 @@
 ﻿using EFCoreDemo.Data;
 using EFCoreDemo.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace EFCoreDemo.Controllers
 {
@@ -13,9 +15,35 @@ namespace EFCoreDemo.Controllers
             _context = context;
         }
 
+        public IActionResult Index()
+        {
+            var items = _context.ShopItems.Include(s => s.Shop).ToList();
+            var allShops = _context.Shops.ToList();
+
+            var dto = new ShopItemIndex()
+            {
+                ShopItems = items,
+                Shops = allShops
+            };
+            return View(dto);
+        }
+        [HttpPost]
+        public IActionResult Index(ShopItemIndex model)
+        {
+            var items = _context.ShopItems.Include(s => s.Shop).ToList();
+            var allShops = _context.Shops.ToList();
+
+            var dto = new ShopItemIndex()
+            {
+                ShopItems = items.Where(i => i.ShopId == model.ShopId || model.ShopId == 0).ToList(),
+                Shops = allShops
+            };
+            return View(dto);
+        }
         public IActionResult Add()
         {
             var shopItem = new ShopItemCreate();
+            shopItem.Shops = _context.Shops.ToList();
             return View(shopItem);
         }
         [HttpPost]
